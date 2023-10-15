@@ -4,8 +4,12 @@ import android.content.ContentValues
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,17 +43,31 @@ import com.example.frontend.data.ShoppingListItem
 import com.example.frontend.presentation.CurrentList
 import com.example.frontend.presentation.Frontpage
 import com.example.frontend.presentation.NewItem
+import com.example.frontend.presentation.sign_in.GoogleAuthUiClient
+import com.example.frontend.presentation.signin.SignInScreen
+import com.example.frontend.presentation.signin.SignInViewModel
 import com.example.frontend.ui.theme.FrontEndTheme
+import com.google.android.gms.auth.api.identity.Identity
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 
 class MainActivity : ComponentActivity() {
     private val service = RealTimeMessagingClient.create()
 
+    private val googleAuthUiClient by lazy {
+        GoogleAuthUiClient(
+            context = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext)
+        )
+    }
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var edititem: ShoppingListItem? = null
+
+
+
         setContent {
 /*   val posts = produceState<List<ItemResponse>>(initialValue = emptyList()) {
                 recompose = !recompose
@@ -109,8 +131,60 @@ class MainActivity : ComponentActivity() {
                     //val posts = viewmodel.posts.observeAsState()
                     NavHost(
                         navController = navHostController,
-                        startDestination = CurrentList.route
+                        startDestination = "sign_in"
                     ) {
+                        composable(route="sign_in") {
+                            val viewModel = viewModel<SignInViewModel>()
+                            val state by viewModel.state.collectAsStateWithLifecycle()
+
+                            LaunchedEffect(key1 = Unit) {
+                                if(googleAuthUiClient.getSignedInUser() != null) {
+                                    navHostController.navigate(route=CurrentList.route)
+                                }
+                            }
+
+                            val launcher = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.StartIntentSenderForResult(),
+                                onResult = { result ->
+                                    if(result.resultCode == RESULT_OK) {
+                                        lifecycleScope.launch {
+                                            val signInResult = googleAuthUiClient.signInWithIntent(
+                                                intent = result.data ?: return@launch
+                                            )
+                                            viewModel.onSignInResult(signInResult)
+                                        }
+                                    }
+                                }
+                            )
+
+                            LaunchedEffect(key1 = state.isSignInSuccessful) {
+                                if(state.isSignInSuccessful) {
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "Sign in successful",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                    navHostController.navigate(route=CurrentList.route)
+                                    viewModel.resetState()
+                                }
+                            }
+
+                            SignInScreen(
+                                state = state,
+                                onSignInClick = {
+                                    lifecycleScope.launch {
+                                        val signInIntentSender = googleAuthUiClient.signIn()
+                                        launcher.launch(
+                                            IntentSenderRequest.Builder(
+                                                signInIntentSender ?: return@launch
+                                            ).build()
+                                        )
+                                    }
+                                }
+                            )
+                        }
+
                         composable(route = CurrentList.route) {
                             Frontpage(
                                 posts = state.currentList,
@@ -118,6 +192,7 @@ class MainActivity : ComponentActivity() {
                                 myViewModel = viewModel
                             ) { a: ShoppingListItem -> edititem = a.copy() }
                         }
+
                         composable(
                             route = NewItem.route + "/{newitem}",
                             arguments = listOf(

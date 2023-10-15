@@ -50,39 +50,62 @@ fun Frontpage(posts: List<ShoppingListItem>,
 
             LazyColumn {
                 items(items = posts, key = { item -> item.id!! }) {
+                    /*val delete = SwipeAction(
 
-                    Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically) {
-                        Row(modifier=Modifier.weight(4f),verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { myViewModel.removeFromList(it.id!!) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Search icon"
-                                )
+                        onSwipe = {Log.d("debug","delete swipe")},
+                        background = Color.Blue,
+                        icon = rememberVectorPainter(image = Icons.Default.Delete),
+                        isUndo = false,
+
+                    )
+                    SwipeableActionsBox(
+                        modifier=Modifier,
+                        swipeThreshold=50.dp,
+                        startActions = listOf(delete)
+                    ) {*/
+
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(4f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = { myViewModel.removeFromList(it.id!!) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Search icon"
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    edititem(it)
+                                    navController.navigate(route = NewItem.route + "/false")
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit"
+                                    )
+                                }
+                                Text(text = it.desc, fontSize = 24.sp)
+                                Text(text = "${it.antal} ${it.enhed}", fontSize = 24.sp)
+
+
                             }
-                            IconButton(onClick = {
-                                edititem(it)
-                                navController.navigate(route = NewItem.route + "/false")
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit"
-                                )
-                            }
-                            Text(text = it.desc, fontSize = 24.sp)
-                            Text(text = "${it.antal} ${it.enhed}", fontSize = 24.sp)
+                            Image(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(height = 24.dp),
 
+                                alignment = Alignment.CenterEnd,
+                                painter = butikkerne.find { a -> it.butik == a.name }?.getPainter()
+                                    ?: painterResource(id = R.drawable.ic_launcher_background),
+                                contentDescription = it.butik,
+                                contentScale = ContentScale.Fit
+                            )
 
-                        }
-                        Image(
-                            modifier = Modifier.weight(1f)
-                                .height(height = 24.dp),
-
-                            alignment = Alignment.CenterEnd,
-                            painter = butikkerne.find { a -> it.butik == a.name }?.getPainter()
-                                ?: painterResource(id = R.drawable.ic_launcher_background),
-                            contentDescription = it.butik,
-                            contentScale = ContentScale.Fit
-                        )
+                       /* }*/
                     }
                 }
             }
