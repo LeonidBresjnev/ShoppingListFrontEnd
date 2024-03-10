@@ -8,6 +8,7 @@ import com.example.frontend.data.Action
 import com.example.frontend.data.RealTimeMessagingClient
 import com.example.frontend.data.ShoppingListItem
 import com.example.frontend.data.ShoppingListState
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +47,7 @@ class ShoppingListViewModel(
             initialValue = ShoppingListState())
 
 
+    @OptIn(FlowPreview::class)
     val isactivestate : StateFlow<Boolean> = client.isActive().debounce(1000L).stateIn(
         scope=viewModelScope,
         started=SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),

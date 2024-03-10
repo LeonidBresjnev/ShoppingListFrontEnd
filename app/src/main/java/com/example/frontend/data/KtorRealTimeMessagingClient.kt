@@ -2,7 +2,10 @@ package com.example.frontend.data
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.get
 import io.ktor.client.request.url
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.contentLength
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
@@ -22,10 +25,19 @@ class KtorRealTimeMessagingClient(
     private val client: HttpClient) : RealTimeMessagingClient {
     private var session: WebSocketSession? = null
 
+    suspend fun test() {
+        val res: HttpResponse = client.get("https://google.com")
+        res.contentLength()
+    }
+
     override fun getGameStateStream(): Flow<ShoppingListState> {
+
+
+
+
         return flow {
             session = client.webSocketSession {
-                url(urlString = "ws://192.168.0.208:8080/play")
+                url(urlString = "ws://192.168.8.3:8080/play")
             }
             val gameStates = session!!
                 .incoming

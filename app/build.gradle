@@ -39,7 +39,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.5.3'
+        kotlinCompilerExtensionVersion '1.5.7'
     }
     packagingOptions {
         resources {
@@ -52,40 +52,42 @@ dependencies {
 
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.0')
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
 
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
-    implementation 'androidx.activity:activity-compose:1.8.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.7.0"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.7.0"
+
+    implementation 'androidx.activity:activity-compose:1.8.2'
     implementation platform('androidx.compose:compose-bom:2022.10.00')
-    implementation "androidx.navigation:navigation-compose:2.7.4"
+    implementation "androidx.navigation:navigation-compose:2.7.6"
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
     implementation "androidx.compose.material:material"
     implementation 'androidx.compose.material3:material3:1.1.2'
     implementation "androidx.compose.runtime:runtime-livedata"
 
-    implementation 'com.google.firebase:firebase-auth-ktx:22.1.2'
+    implementation 'com.google.firebase:firebase-auth-ktx:22.3.1'
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
 
-    implementation "io.ktor:ktor-client-core:2.3.5"
-    implementation "io.ktor:ktor-client-android:2.3.5"
-    implementation "io.ktor:ktor-client-content-negotiation:2.3.5"
-    implementation "io.ktor:ktor-client-logging:2.3.5"
-    implementation "io.ktor:ktor-client-serialization:2.3.5"
-    implementation "io.ktor:ktor-serialization-kotlinx-json:2.3.5"
-    implementation("io.ktor:ktor-client-auth:2.3.5")
-    implementation("io.ktor:ktor-client-cio:2.3.5")
+    implementation "io.ktor:ktor-client-core:2.3.7"
+    implementation "io.ktor:ktor-client-android:2.3.7"
+    implementation "io.ktor:ktor-client-content-negotiation:2.3.7"
+    implementation "io.ktor:ktor-client-logging:2.3.7"
+    implementation "io.ktor:ktor-client-serialization:2.3.7"
+    implementation "io.ktor:ktor-serialization-kotlinx-json:2.3.7"
+    implementation("io.ktor:ktor-client-auth:2.3.7")
+    implementation("io.ktor:ktor-client-cio:2.3.7")
 
 
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.6.2"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.2"
-    implementation "io.coil-kt:coil-compose:2.2.2"
-
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
+    implementation "io.coil-kt:coil-compose:2.5.0"
 
 
-    implementation("me.saket.swipe:swipe:1.2.0")
+    implementation("org.slf4j:slf4j-api:2.0.11")
+    implementation("org.slf4j:slf4j-simple:2.0.11")
+
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2"
+
 
     /*testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

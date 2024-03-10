@@ -15,11 +15,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,6 +69,7 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
+    @OptIn(ExperimentalMaterial3Api::class)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,132 +90,167 @@ class MainActivity : ComponentActivity() {
 
                 val viewModel = ShoppingListViewModel(service)
                 val state by viewModel.state.collectAsState()
-                val isactivestate by viewModel.isactivestate.collectAsState()
+                //val isactivestate by viewModel.isactivestate.collectAsState()
 
                 var isactive by remember { mutableStateOf(false) }
 
 
                 val isConnecting by viewModel.isConnecting.collectAsState()
                 val showConnectionError by viewModel.showConnectionError.collectAsState()
-                if (showConnectionError) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Couldn't connect to the server",
-                            color = MaterialTheme.colorScheme.error
+
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        CenterAlignedTopAppBar(
+                            title = { Text(text = "Shopping list") },
+                            navigationIcon = {
+                                IconButton(onClick = {navHostController.popBackStack()}) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowBack,
+                                        contentDescription = "Go back"
+                                    )
+                                }
+                            }
                         )
-                    }
-                    if (isConnecting) {
+                    },
+                ) {
+
+                    if (showConnectionError) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.White),
+
+                            modifier = Modifier.padding(it).fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator()
+                            Text(
+                                text = "Couldn't connect to the server",
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
-                    }
-                    return@FrontEndTheme
-                }
-                Column {
-                    LazyColumn {
-                        items(items = state.connectedPlayers, key = { item -> item }) {
-                            Text(text=it)
+                        if (isConnecting) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
                         }
-                        }
-                    Button(onClick = {isactive = service.isActive_()}) {
-                        Text("status er $isactive")
-                    }
-                    Button(onClick = {
-                        runBlocking {
-                            service.close()
-                        }
-                        }) {
-                        Text(text="Afbryd")
-                    }
-
-
-                    //val posts = viewmodel.posts.observeAsState()
-                    NavHost(
-                        navController = navHostController,
-                        startDestination = "sign_in"
-                    ) {
-                        composable(route="sign_in") {
-                            val viewModel = viewModel<SignInViewModel>()
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-
-                            LaunchedEffect(key1 = Unit) {
-                                if(googleAuthUiClient.getSignedInUser() != null) {
-                                    navHostController.navigate(route=CurrentList.route)
+                    } else {
+                        Column(modifier = Modifier.padding(it).fillMaxSize()) {
+                            LazyColumn {
+                                items(items = state.connectedPlayers, key = { item -> item }) {str->
+                                    Text(text = str)
                                 }
                             }
+                            Button(onClick = { isactive = service.isActive_() }) {
+                                Text("status er $isactive")
+                            }
+                            Button(onClick = {
+                                runBlocking {
+                                    service.close()
+                                }
+                            }) {
+                                Text(text = "Afbryd")
+                            }
 
-                            val launcher = rememberLauncherForActivityResult(
-                                contract = ActivityResultContracts.StartIntentSenderForResult(),
-                                onResult = { result ->
-                                    if(result.resultCode == RESULT_OK) {
-                                        lifecycleScope.launch {
-                                            val signInResult = googleAuthUiClient.signInWithIntent(
-                                                intent = result.data ?: return@launch
-                                            )
-                                            viewModel.onSignInResult(signInResult)
+
+                            //val posts = viewmodel.posts.observeAsState()
+                            NavHost(
+                                modifier = Modifier.padding(it),
+                                navController = navHostController,
+                                startDestination = "sign_in"
+                            ) {
+                                composable(route = "sign_in") {
+                                    val viewModel = viewModel<SignInViewModel>()
+                                    val state by viewModel.state.collectAsStateWithLifecycle()
+
+                                    LaunchedEffect(key1 = Unit) {
+                                        if (googleAuthUiClient.getSignedInUser() != null) {
+                                            navHostController.navigate(route = CurrentList.route)
                                         }
                                     }
+
+                                    val launcher = rememberLauncherForActivityResult(
+                                        contract = ActivityResultContracts.StartIntentSenderForResult(),
+                                        onResult = { result ->
+                                            if (result.resultCode == RESULT_OK) {
+                                                lifecycleScope.launch {
+                                                    val signInResult =
+                                                        googleAuthUiClient.signInWithIntent(
+                                                            intent = result.data ?: return@launch
+                                                        )
+                                                    viewModel.onSignInResult(signInResult)
+                                                }
+                                            }
+                                        }
+                                    )
+
+                                    LaunchedEffect(key1 = state.isSignInSuccessful) {
+                                        if (state.isSignInSuccessful) {
+                                            Toast.makeText(
+                                                applicationContext,
+                                                "Sign in successful",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
+                                            navHostController.navigate(route = CurrentList.route)
+                                            viewModel.resetState()
+                                        }
+                                    }
+
+                                    SignInScreen(
+                                        state = state,
+                                        onSignInClick = {
+                                            lifecycleScope.launch {
+                                                val signInIntentSender = googleAuthUiClient.signIn()
+                                                launcher.launch(
+                                                    IntentSenderRequest.Builder(
+                                                        signInIntentSender ?: return@launch
+                                                    ).build()
+                                                )
+                                            }
+                                        }
+                                    )
                                 }
-                            )
 
-                            LaunchedEffect(key1 = state.isSignInSuccessful) {
-                                if(state.isSignInSuccessful) {
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "Sign in successful",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                composable(route = CurrentList.route) {
+                                    Frontpage(
+                                        posts = state.currentList,
+                                        navController = navHostController,
+                                        myViewModel = viewModel,
+                                        onSignOut = {
+                                            lifecycleScope.launch {
+                                                googleAuthUiClient.signOut()
+                                                Toast.makeText(
+                                                    applicationContext,
+                                                    "Signed out",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
 
-                                    navHostController.navigate(route=CurrentList.route)
-                                    viewModel.resetState()
+                                                navHostController.popBackStack()
+                                            }
+                                        }
+                                    ) { a: ShoppingListItem -> edititem = a.copy() }
+                                }
+
+                                composable(
+                                    route = NewItem.route + "/{newitem}",
+                                    arguments = listOf(
+                                        navArgument(name = "newitem") { type = NavType.BoolType }
+                                    )) { entry->
+
+                                    val newitem = entry.arguments?.getBoolean("newitem") ?: true
+                                    Log.d(ContentValues.TAG, "$newitem")
+                                    NewItem(
+                                        navController = navHostController,
+                                        myViewModel = viewModel,
+                                        newItem = newitem,
+                                        editItem = edititem
+                                    )
                                 }
                             }
-
-                            SignInScreen(
-                                state = state,
-                                onSignInClick = {
-                                    lifecycleScope.launch {
-                                        val signInIntentSender = googleAuthUiClient.signIn()
-                                        launcher.launch(
-                                            IntentSenderRequest.Builder(
-                                                signInIntentSender ?: return@launch
-                                            ).build()
-                                        )
-                                    }
-                                }
-                            )
-                        }
-
-                        composable(route = CurrentList.route) {
-                            Frontpage(
-                                posts = state.currentList,
-                                navController = navHostController,
-                                myViewModel = viewModel
-                            ) { a: ShoppingListItem -> edititem = a.copy() }
-                        }
-
-                        composable(
-                            route = NewItem.route + "/{newitem}",
-                            arguments = listOf(
-                                navArgument(name = "newitem") { type = NavType.BoolType }
-                            )) {
-
-                            val newitem = it.arguments?.getBoolean("newitem") ?: true
-                            Log.d(ContentValues.TAG, "$newitem")
-                            NewItem(
-                                navController = navHostController,
-                                myViewModel = viewModel,
-                                newItem = newitem,
-                                editItem = edititem
-                            )
                         }
                     }
                 }
